@@ -11,6 +11,10 @@
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Easydict.WinUI.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <Version>0.1.3</Version>
     <PackageVersion>0.1.3</PackageVersion>
