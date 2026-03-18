@@ -717,8 +717,30 @@ public class BaseDict
 
         if ((meta.Encrypt & 1) != 0)
         {
-            if (string.IsNullOrEmpty(meta.Passcode)) throw new Exception("User identification is needed to read encrypted file");
-            throw new NotSupportedException("Encrypted file not supported yet");
+            if (string.IsNullOrEmpty(meta.Passcode))
+                throw new InvalidOperationException("User credentials required for encrypted dictionary. " +
+                    "Set Passcode to \"{base64_regcode}\\t{email}\" for email-registered dictionaries.");
+
+            // Parse passcode as "base64_regcode\temail_or_deviceid"
+            var parts = meta.Passcode.Split('\t');
+            if (parts.Length < 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
+                throw new InvalidOperationException("Invalid passcode format. Expected \"{base64_regcode}\\t{email_or_deviceid}\".");
+
+            var regcode = Convert.FromBase64String(parts[0]);
+            var userid = parts[1];
+
+            byte[] encryptKey;
+            var registerBy = header["RegisterBy"]?.ToString();
+            if (string.Equals(registerBy, "EMail", StringComparison.OrdinalIgnoreCase))
+            {
+                encryptKey = Common.DecryptRegcodeByEmail(regcode, userid);
+            }
+            else
+            {
+                encryptKey = Common.DecryptRegcodeByDeviceId(regcode, Encoding.UTF8.GetBytes(userid));
+            }
+
+            keyHeaderBuff = Common.SalsaDecrypt(keyHeaderBuff, encryptKey);
         }
 
         var offset = 0;

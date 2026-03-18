@@ -1,6 +1,8 @@
 ﻿using System.Buffers.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
 
 namespace MDict.Csharp.Utils;
 
@@ -170,12 +172,38 @@ internal static partial class Utils
     }
 
     /// <summary>
-    /// 占位函数：Salsa20 解密
+    /// Decrypt data using Salsa20/8 (8 rounds) with an 8-byte zero IV.
+    /// Used for type-2 encrypted MDX key block headers.
     /// </summary>
     public static byte[] SalsaDecrypt(byte[] data, byte[] key)
     {
-        // TODO: implement Salsa20 decryption (8 rounds)
-        return data;
+        var engine = new Salsa20Engine(8);
+        var parameters = new ParametersWithIV(new KeyParameter(key), new byte[8]);
+        engine.Init(false, parameters);
+        var output = new byte[data.Length];
+        engine.ProcessBytes(data, 0, data.Length, output, 0);
+        return output;
+    }
+
+    /// <summary>
+    /// Derive the encryption key from a registration code and email address (RegisterBy=EMail).
+    /// Key derivation: emailDigest = RIPEMD128(email UTF-16LE), then Salsa20/8(regcode, emailDigest).
+    /// </summary>
+    public static byte[] DecryptRegcodeByEmail(byte[] regcode, string email)
+    {
+        var emailBytes = Encoding.Unicode.GetBytes(email);
+        var emailDigest = Ripemd128.ComputeHash(emailBytes);
+        return SalsaDecrypt(regcode, emailDigest);
+    }
+
+    /// <summary>
+    /// Derive the encryption key from a registration code and device ID (RegisterBy=DeviceID).
+    /// Key derivation: deviceIdDigest = RIPEMD128(deviceId), then Salsa20/8(regcode, deviceIdDigest).
+    /// </summary>
+    public static byte[] DecryptRegcodeByDeviceId(byte[] regcode, byte[] deviceId)
+    {
+        var deviceIdDigest = Ripemd128.ComputeHash(deviceId);
+        return SalsaDecrypt(regcode, deviceIdDigest);
     }
 
     /// <summary>
