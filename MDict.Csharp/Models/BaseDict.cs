@@ -478,9 +478,9 @@ public class BaseDict
         return key.ToLower().Trim();
     }
 
-    private bool IsKeyCaseSensitive()
+    internal bool IsKeyCaseSensitive()
     {
-        return options.IsCaseSensitive == true || Common.IsTrue(header["isCaseSensitive"]?.ToString());
+        return options.IsCaseSensitive == true || Common.IsTrue(header["KeyCaseSensitive"]?.ToString());
     }
 
     private bool IsStripKey()
@@ -517,7 +517,8 @@ public class BaseDict
         // this._readRecordBlock();
 
         // Finally: resort the keyword list
-        keywordList.Sort((k1, k2) => string.Compare(k1.KeyText, k2.KeyText, StringComparison.Ordinal));
+        var sortComparison = IsKeyCaseSensitive() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        keywordList.Sort((k1, k2) => string.Compare(k1.KeyText, k2.KeyText, sortComparison));
     }
 
     /// <summary>

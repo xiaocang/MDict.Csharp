@@ -32,7 +32,7 @@ public class Dict : BaseDict
         options.Debug ??= false;
         options.Resort ??= true;
         options.IsStripKey ??= true;
-        options.IsCaseSensitive ??= true;
+        options.IsCaseSensitive ??= false;
         options.EncryptType ??= -1;
     }
 
@@ -146,9 +146,10 @@ public class Dict : BaseDict
         return -1;
     }
 
-    private static int Comp(string word1, string word2)
+    private int Comp(string word1, string word2)
     {
-        return string.Compare(word1, word2, StringComparison.Ordinal);
+        var comparison = IsKeyCaseSensitive() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        return string.Compare(word1, word2, comparison);
     }
 
     private byte[] DecompressBuff(byte[] recordBuffer, int unpackSize)
