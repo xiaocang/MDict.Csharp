@@ -169,6 +169,17 @@ public class MdxDict : Dict
             .Take(fuzzySize)
             .ToList();
     }
+
+    /// <summary>
+    /// Enumerates all dictionary keys in normalized sort order.
+    /// </summary>
+    public IEnumerable<string> EnumerateKeys()
+    {
+        foreach (var item in keywordList)
+        {
+            yield return item.KeyText;
+        }
+    }
 }
 
 /// <summary>
